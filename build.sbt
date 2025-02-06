@@ -1,0 +1,17 @@
+ThisBuild / version := "0.1.0-SNAPSHOT"
+
+ThisBuild / scalaVersion := "3.4.1"
+
+lazy val root = (project in file("."))
+  .settings(
+    name := "oystr-hotel",
+    libraryDependencies += "org.typelevel" %% "cats-core" % "2.13.0",
+    libraryDependencies += "org.typelevel" %% "cats-effect" % "3.5.7",
+    libraryDependencies ++= Seq("org.http4s" %% "http4s-core" % "1.0.0-M44",
+      "org.http4s" %% "http4s-dsl" % "1.0.0-M44",
+      "org.http4s" %% "http4s-ember-server" % "1.0.0-M44",
+      "org.http4s" %% "http4s-circe" % "1.0.0-M44"),
+    libraryDependencies ++= Seq("io.circe" %% "circe-core" % "0.14.10",
+      "io.circe" %% "circe-generic" % "0.14.10"),
+    libraryDependencies += "org.tpolecat" %% "skunk-core" % "0.6.4"
+  )
