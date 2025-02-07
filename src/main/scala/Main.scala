@@ -31,7 +31,7 @@ object Main extends Simple:
       val createReservationService = CreateReservationService(roomsRepository, reservationsRepository)
       val createRoomService = CreateRoomService(roomsRepository)
       val roomController = RoomController(createRoomService)
-      val reservationController = ReservationController()
+      val reservationController = ReservationController(createReservationService)
       
       val httpApp = roomController.routes <+> reservationController.routes
       

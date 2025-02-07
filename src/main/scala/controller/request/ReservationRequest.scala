@@ -1,13 +1,13 @@
 package controller.request
 
-import io.circe.derivation.{Configuration, ConfiguredCodec}
-import io.circe.Codec
-import org.http4s.circe.{CirceEntityDecoder, CirceEntityEncoder}
+import io.circe.derivation.{Configuration, ConfiguredDecoder, ConfiguredEncoder}
+import io.circe.{Decoder, Encoder}
 
 import java.time.LocalDateTime
 
 case class ReservationRequest(roomNumber: Short, checkInDate: LocalDateTime, checkOutDate: LocalDateTime, guestName: String)
 
-object ReservationRequest extends CirceEntityDecoder with CirceEntityEncoder:
+object ReservationRequest:
   given Configuration = Configuration.default.withSnakeCaseMemberNames
-  val decoder: Codec[ReservationRequest] = ConfiguredCodec.derived
+  given Decoder[ReservationRequest] = ConfiguredDecoder.derived
+  given Encoder[ReservationRequest] = ConfiguredEncoder.derived
