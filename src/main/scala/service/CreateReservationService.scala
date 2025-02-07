@@ -13,7 +13,7 @@ case class CreateReservationService(roomsRepository: RoomsRepository, reservatio
     EitherT
       .apply(validateRoom(reservation))
       .flatMapF(validateReservation)
-      .semiflatMap(reservationsRepository.insertReservation)
+      .semiflatMap(reservationsRepository.createReservation)
       .value
   
   private def validateRoom(reservation: Reservation): IO[Either[CustomError, Reservation]] =
@@ -23,8 +23,8 @@ case class CreateReservationService(roomsRepository: RoomsRepository, reservatio
     }
 
   private def validateReservation(reservation: Reservation): IO[Either[CustomError, Reservation]] =
-    reservationsRepository.findConflict(reservation.roomNumber, reservation.checkInDate, reservation.checkOutDate)
+    reservationsRepository.findConflictingReservations(reservation.roomNumber, reservation.checkInDate, reservation.checkOutDate)
       .map {
-        case None => Right(reservation)
+        case Nil => Right(reservation)
         case _ => Left(CustomError.ConflictingReservation)
       }

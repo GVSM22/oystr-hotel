@@ -7,6 +7,7 @@ lazy val root = (project in file("."))
     name := "oystr-hotel",
     libraryDependencies += "org.typelevel" %% "cats-core" % "2.13.0",
     libraryDependencies += "org.typelevel" %% "cats-effect" % "3.5.7",
+    libraryDependencies += "org.typelevel" %% "log4cats-slf4j" % "2.7.0",
     libraryDependencies ++= Seq("org.http4s" %% "http4s-core" % "1.0.0-M44",
       "org.http4s" %% "http4s-dsl" % "1.0.0-M44",
       "org.http4s" %% "http4s-ember-server" % "1.0.0-M44",

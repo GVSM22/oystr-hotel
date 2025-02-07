@@ -1,14 +1,19 @@
 import cats.effect.*
 import cats.effect.IOApp.Simple
-import model.Reservation
-import skunk.*
+import cats.implicits.toSemigroupKOps
+import com.comcast.ip4s.{ipv4, port}
+import controller.{ReservationController, RoomController}
 import natchez.Trace.Implicits.noop
+import org.http4s.ember.server.EmberServerBuilder
+import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.noop.NoOpFactory
 import repository.{ReservationsRepository, RoomsRepository}
-import service.CreateReservationService
-
-import java.time.LocalDateTime
+import service.{CreateReservationService, CreateRoomService}
+import skunk.*
 
 object Main extends Simple:
+
+  given LoggerFactory[IO] = NoOpFactory[IO]
 
   private val sessionResource: Resource[IO, Session[IO]] =
     Session.single(
@@ -19,17 +24,21 @@ object Main extends Simple:
       password = Some("dbpassword")
     )
 
-  private val reservation = Reservation(1, LocalDateTime.now().plusHours(5), LocalDateTime.now().plusDays(1L), "jersin")
-
   override def run: IO[Unit] =
-    sessionResource.use { session =>
+    sessionResource.flatMap { session =>
       val roomsRepository = RoomsRepository(session)
       val reservationsRepository = ReservationsRepository(session)
       val createReservationService = CreateReservationService(roomsRepository, reservationsRepository)
-
-      createReservationService.createReservation(reservation)
-        .flatMap {
-          case Left(value) => IO.println(s"erro! $value")
-          case Right(value) => IO.println(s"sucesso! $value")
-        }
-    }
+      val createRoomService = CreateRoomService(roomsRepository)
+      val roomController = RoomController(createRoomService)
+      val reservationController = ReservationController()
+      
+      val httpApp = roomController.routes <+> reservationController.routes
+      
+      EmberServerBuilder
+        .default[IO]
+        .withHost(ipv4"0.0.0.0")
+        .withPort(port"8080")
+        .withHttpApp(httpApp.orNotFound)
+        .build
+    }.useForever
