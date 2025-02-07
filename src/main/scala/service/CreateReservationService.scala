@@ -25,6 +25,6 @@ case class CreateReservationService(roomsRepository: RoomsRepository, reservatio
   private def validateReservation(reservation: Reservation): IO[Either[CustomError, Reservation]] =
     reservationsRepository.findConflict(reservation.roomNumber, reservation.checkInDate, reservation.checkOutDate)
       .map {
-        case _: Some[Reservation] => Left(CustomError.ConflictingReservation)
-        case _ => Right(reservation)
+        case None => Right(reservation)
+        case _ => Left(CustomError.ConflictingReservation)
       }
