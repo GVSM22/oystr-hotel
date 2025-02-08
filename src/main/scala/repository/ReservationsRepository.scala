@@ -8,12 +8,13 @@ import skunk.{Command, Fragment, Query, Session}
 import skunk.codec.all.{int2, timestamp}
 import skunk.data.Completion
 import skunk.implicits.sql
+import usecase.createReservation.model.CreateReservationResult
 
 import java.time.LocalDateTime
 
 trait ReservationsRepository:
   def findConflictingReservations(roomNumber: Short, checkInDate: LocalDateTime, checkOutDate: LocalDateTime): IO[List[Reservation]]
-  def createReservation(reservation: Reservation): IO[Completion]
+  def createReservation(reservation: Reservation): IO[CreateReservationResult]
   
 object ReservationsRepository:
   
@@ -47,8 +48,9 @@ object ReservationsRepository:
             .fold(List.empty)((list, res) => list :+ ReservationMapper.fromEntity(res))
         )
   
-    override def createReservation(reservation: Reservation): IO[Completion] =
+    override def createReservation(reservation: Reservation): IO[CreateReservationResult] =
       val command: Command[ReservationEntity] =
         sql"""INSERT INTO reservations (room_number, check_in_date, check_out_date, guest_name) VALUES ${ReservationEntity.reservationEncoder}""".command
       session.prepare(command)
         .flatMap(_.execute(ReservationMapper.toEntity(reservation)))
+        .map(_ => CreateReservationResult.ReservationCreated)

@@ -8,8 +8,10 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.noop.NoOpFactory
 import repository.{ReservationsRepository, RoomsRepository}
-import service.{CreateReservationService, CreateRoomService}
 import skunk.*
+import usecase.createReservation.CreateReservationUseCase
+import usecase.createRoom.CreateRoomUseCase
+import usecase.removeRoom.RemoveRoomUseCase
 
 object Main extends Simple:
 
@@ -28,9 +30,12 @@ object Main extends Simple:
     sessionResource.flatMap { session =>
       val roomsRepository = RoomsRepository(session)
       val reservationsRepository = ReservationsRepository(session)
-      val createReservationService = CreateReservationService(roomsRepository, reservationsRepository)
-      val createRoomService = CreateRoomService(roomsRepository)
-      val roomController = RoomController(createRoomService)
+      
+      val createReservationService = CreateReservationUseCase(roomsRepository, reservationsRepository)
+      val createRoomService = CreateRoomUseCase(roomsRepository)
+      val removeRoomService = RemoveRoomUseCase(roomsRepository)
+      
+      val roomController = RoomController(createRoomService, removeRoomService)
       val reservationController = ReservationController(createReservationService)
       
       val httpApp = roomController.routes <+> reservationController.routes
