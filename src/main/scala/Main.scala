@@ -11,6 +11,7 @@ import repository.{ReservationsRepository, RoomsRepository}
 import skunk.*
 import usecase.createReservation.CreateReservationUseCase
 import usecase.createRoom.CreateRoomUseCase
+import usecase.occupancy.OccupancyUseCase
 import usecase.removeRoom.RemoveRoomUseCase
 
 object Main extends Simple:
@@ -31,12 +32,13 @@ object Main extends Simple:
       val roomsRepository = RoomsRepository(session)
       val reservationsRepository = ReservationsRepository(session)
       
-      val createReservationService = CreateReservationUseCase(roomsRepository, reservationsRepository)
-      val createRoomService = CreateRoomUseCase(roomsRepository)
-      val removeRoomService = RemoveRoomUseCase(roomsRepository)
+      val createReservationUseCase = CreateReservationUseCase(roomsRepository, reservationsRepository)
+      val createRoomUseCase = CreateRoomUseCase(roomsRepository)
+      val removeRoomUseCase = RemoveRoomUseCase(roomsRepository)
+      val occupancyUseCase = OccupancyUseCase(reservationsRepository, roomsRepository)
       
-      val roomController = RoomController(createRoomService, removeRoomService)
-      val reservationController = ReservationController(createReservationService)
+      val roomController = RoomController(createRoomUseCase, removeRoomUseCase)
+      val reservationController = ReservationController(createReservationUseCase, occupancyUseCase)
       
       val httpApp = roomController.routes <+> reservationController.routes
       

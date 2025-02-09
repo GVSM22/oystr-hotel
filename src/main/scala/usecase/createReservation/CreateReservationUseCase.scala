@@ -6,7 +6,6 @@ import cats.syntax.functor.toFunctorOps
 import model.{CreateReservationError, CreateReservationResult}
 import _root_.model.Reservation
 import repository.{ReservationsRepository, RoomsRepository}
-import skunk.data.Completion
 
 case class CreateReservationUseCase(roomsRepository: RoomsRepository, reservationsRepository: ReservationsRepository):
   def createReservation(reservation: Reservation): IO[Either[CreateReservationError, CreateReservationResult]] =

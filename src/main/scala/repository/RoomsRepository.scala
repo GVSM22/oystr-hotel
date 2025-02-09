@@ -6,17 +6,19 @@ import model.Room
 import repository.entity.RoomEntity
 import repository.exception.PostgresException
 import repository.mapper.RoomMapper
-import skunk.codec.all.int2
+import skunk.Void
+import skunk.codec.all.{int2, int8}
 import skunk.exception.PostgresErrorException
 import skunk.implicits.sql
 import skunk.{Command, Query, Session}
 import usecase.createRoom.model.CreateRoomResult
-import usecase.removeRoom.model.{RemoveRoomError, RemoveRoomResult}
+import usecase.removeRoom.model.RemoveRoomResult
 
 trait RoomsRepository:
   def findRoom(roomNumber: Short): IO[Option[Room]]
   def createRoom(roomNumber: Short): IO[CreateRoomResult]
   def deleteRoom(roomNumber: Short): IO[RemoveRoomResult]
+  def getAllRooms: IO[Long]
 
 object RoomsRepository:
   
@@ -46,3 +48,7 @@ object RoomsRepository:
         .adaptError {
           case p: PostgresErrorException => PostgresException(p.code)
         }
+
+    override def getAllRooms: IO[Long] =
+      val q: Query[Void, Long] = sql"""SELECT COUNT(*) FROM rooms""".query(int8)
+      session.unique(q)
