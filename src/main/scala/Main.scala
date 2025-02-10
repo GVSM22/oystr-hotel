@@ -1,9 +1,12 @@
+import cats.data.{Kleisli, OptionT}
 import cats.effect.*
 import cats.effect.IOApp.Simple
 import cats.implicits.toSemigroupKOps
 import com.comcast.ip4s.{ipv4, port}
 import controller.{ReservationController, RoomController}
+import middleware.LogErrorsMiddleware
 import natchez.Trace.Implicits.noop
+import org.http4s.Response
 import org.http4s.ember.server.EmberServerBuilder
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.noop.NoOpFactory
@@ -31,21 +34,24 @@ object Main extends Simple:
     sessionResource.flatMap { session =>
       val roomsRepository = RoomsRepository(session)
       val reservationsRepository = ReservationsRepository(session)
-      
+
       val createReservationUseCase = CreateReservationUseCase(roomsRepository, reservationsRepository)
       val createRoomUseCase = CreateRoomUseCase(roomsRepository)
       val removeRoomUseCase = RemoveRoomUseCase(roomsRepository)
       val occupancyUseCase = OccupancyUseCase(reservationsRepository, roomsRepository)
-      
+
       val roomController = RoomController(createRoomUseCase, removeRoomUseCase)
       val reservationController = ReservationController(createReservationUseCase, occupancyUseCase)
-      
+
       val httpApp = roomController.routes <+> reservationController.routes
-      
+
       EmberServerBuilder
         .default[IO]
         .withHost(ipv4"0.0.0.0")
         .withPort(port"8080")
-        .withHttpApp(httpApp.orNotFound)
+        .withHttpApp(LogErrorsMiddleware(httpApp).orNotFound)
         .build
-    }.useForever
+    }
+      .evalTap(_ => IO.println("server started!"))
+      .useForever
+      .onCancel(IO.println("server ended"))

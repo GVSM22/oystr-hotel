@@ -1,27 +1,23 @@
 package usecase.occupancy
 
 import cats.effect.IO
-import model.Reservation
 import repository.{ReservationsRepository, RoomsRepository}
 
 import java.time.LocalDate
 import scala.math.BigDecimal.RoundingMode
 
-case class OccupancyUseCase(reservationsRepository: ReservationsRepository, roomsRepository: RoomsRepository):
+case class OccupancyUseCase(private val reservationsRepository: ReservationsRepository, private val roomsRepository: RoomsRepository):
 
   def getOccupancyForDay(date: LocalDate): IO[BigDecimal] =
-    val occupiedRooms = reservationsRepository.findReservationsForDate(date)
-    val roomTotal = roomsRepository.getAllRooms
-
-    val totalOfOccupiedRooms = occupiedRooms.map(
-      _.groupBy(_.roomNumber)
-        .collect {
-          case (k, head :: tail) => k -> head
-        }
-        .size
+    val occupiedRooms = reservationsRepository.findReservationsForDate(date).map(
+      _.groupBy(_.roomNumber).size
     )
 
     for {
-      rooms <- roomTotal
-      occupied <- totalOfOccupiedRooms
-    } yield (BigDecimal(occupied) / BigDecimal(rooms) * 100).setScale(1, RoundingMode.HALF_UP)
+      rooms <- roomsRepository.countRooms()
+      occupied <- occupiedRooms
+      percentage = if (rooms == 0) BigDecimal(0) else percentageOfOccupiedRooms(rooms, occupied)
+    } yield percentage
+
+  private def percentageOfOccupiedRooms(roomsQuantity: Long, occupiedQuantity: Int): BigDecimal =
+    (BigDecimal(occupiedQuantity) / BigDecimal(roomsQuantity) * 100).setScale(1, RoundingMode.HALF_UP)

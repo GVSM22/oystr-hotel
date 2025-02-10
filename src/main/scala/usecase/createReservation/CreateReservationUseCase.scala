@@ -7,14 +7,14 @@ import model.{CreateReservationError, CreateReservationResult}
 import _root_.model.Reservation
 import repository.{ReservationsRepository, RoomsRepository}
 
-case class CreateReservationUseCase(roomsRepository: RoomsRepository, reservationsRepository: ReservationsRepository):
+case class CreateReservationUseCase(private val roomsRepository: RoomsRepository, private val reservationsRepository: ReservationsRepository):
   def createReservation(reservation: Reservation): IO[Either[CreateReservationError, CreateReservationResult]] =
     EitherT
       .apply(validateRoom(reservation))
       .flatMapF(validateReservation)
       .semiflatMap(reservationsRepository.createReservation)
       .value
-  
+
   private def validateRoom(reservation: Reservation): IO[Either[CreateReservationError, Reservation]] =
     roomsRepository.findRoom(reservation.roomNumber).map {
       _.as(reservation)

@@ -28,5 +28,5 @@ case class RoomController(createRoomUseCase: CreateRoomUseCase, removeRoomUseCas
   private def deleteRoom(roomNumber: Short): IO[Response[IO]] =
     removeRoomUseCase.removeRoom(roomNumber).map {
       case Left(RemoveRoomError.`Can't remove a reserved room`) => Conflict
-      case Right(RemoveRoomResult.Deleted) => NoContent
+      case Right(RemoveRoomResult.Success) => NoContent
     }.map(Response[IO].apply(_))

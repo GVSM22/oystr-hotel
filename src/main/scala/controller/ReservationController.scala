@@ -25,7 +25,7 @@ case class ReservationController(createReservationUseCase: CreateReservationUseC
   given QueryParamDecoder[LocalDate] = QueryParamDecoder.localDate(DateTimeFormatter.ISO_LOCAL_DATE)
   private object LocalDateParamDecoderMatcher extends QueryParamDecoderMatcher[LocalDate]("date")
 
-  def createReservation(request: Request[IO]): IO[Response[IO]] =
+  private def createReservation(request: Request[IO]): IO[Response[IO]] =
     val reservationResult = for {
       body <- request.as[ReservationRequest]
       reservation = ReservationMapper.fromRequest(body)
@@ -36,11 +36,9 @@ case class ReservationController(createReservationUseCase: CreateReservationUseC
       case Left(InvalidRoom) => Response[IO](NotFound)
       case Left(ConflictingReservation) => Response[IO](Conflict)
       case Right(CreateReservationResult.ReservationCreated) => Response[IO](Created)
-    }.onError(IO.println)
+    }
 
-  def occupancyForDay(date: LocalDate): IO[Response[IO]] =
-    IO.println(date) >>
+  private def occupancyForDay(date: LocalDate): IO[Response[IO]] =
     occupancyUseCase.getOccupancyForDay(date)
       .map(OccupancyResponse.apply)
       .map(Response[IO]().withEntity)
-      .onError(IO.println)

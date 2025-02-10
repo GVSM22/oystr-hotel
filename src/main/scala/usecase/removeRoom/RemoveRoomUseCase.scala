@@ -6,7 +6,7 @@ import repository.exception.PostgresException
 import usecase.removeRoom.model.RemoveRoomError.`Can't remove a reserved room`
 import usecase.removeRoom.model.{RemoveRoomError, RemoveRoomResult}
 
-case class RemoveRoomUseCase(roomsRepository: RoomsRepository):
+case class RemoveRoomUseCase(private val roomsRepository: RoomsRepository):
   
   def removeRoom(roomNumber: Short): IO[Either[RemoveRoomError, RemoveRoomResult]] =
     roomsRepository.deleteRoom(roomNumber)
